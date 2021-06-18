@@ -1,13 +1,13 @@
 
 
-export const STRESS_HELP_INFO = [
+export const START_HELP_INFO = [
   {
     header: 'Stress',
     content: 'Start stress test',
   },
   {
     header: 'Usage',
-    content: '$ s cli fc-stress stress <options>',
+    content: '$ s cli fc-stress start <options>',
   },
   {
     header: 'Options',

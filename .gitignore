@@ -4,3 +4,6 @@ node_modules
 !lib/lib/utils/stress_test/.s
 package-lock.json
 lib/lib/utils/stress_test/code
+
+.idea/
+.vscode/

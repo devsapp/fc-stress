@@ -1,4 +1,4 @@
-export declare const STRESS_HELP_INFO: ({
+export declare const START_HELP_INFO: ({
     header: string;
     content: string;
     optionList?: undefined;

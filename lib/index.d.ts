@@ -5,11 +5,11 @@ export default class FcStressComponent extends BaseComponent {
     private report;
     private argsParser;
     /**
-     * stress test
+     * start stress test
      * @param inputs
      * @returns
      */
-    stress(inputs: InputProps): Promise<any>;
+    start(inputs: InputProps): Promise<any>;
     /**
      * clean stress helper function and html report file
      * @param inputs

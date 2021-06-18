@@ -49,7 +49,7 @@ export class FcStress extends IInputsBase{
 
   constructor(serverlessProfile: ServerlessProfile, creds: ICredentials, region: string, stressOpts?: StressOption, httpTypeOpts?: HttpTypeOption, eventTypeOpts?: EventTypeOption, curPath?: string, args?: string) {
     super(serverlessProfile, region, creds, curPath, args);
-    
+
     this.stressOpts = stressOpts;
     if (this.stressOpts) {
       this.stressOpts.numUser = this.stressOpts.numUser || FcStress.defaultStressOpts.numUser;
@@ -65,6 +65,10 @@ export class FcStress extends IInputsBase{
   public validate(): boolean {
     if (this.stressOpts) {
       const functionType: string = this.stressOpts.functionType;
+      if (!functionType) {
+        logger.error(`Please input function type!`);
+        return false;
+      }
       if (!_.includes(FcStress.supportedFunctionTypes, functionType)) {
         logger.error(`Unsupported function type: ${functionType}`);
         return false;
@@ -206,7 +210,7 @@ export class FcStress extends IInputsBase{
     if (data?.errorMessage) {
       if (data?.errorMessage.includes(`[Errno 2] No such file or directory: '/tmp/report.html'`)) {
         throw new Error(`Invalid format of payload.`);
-      } 
+      }
       throw new Error(`Helper function error type: ${data?.errorType}, error message: ${data?.errorMessage}`);
     }
   }

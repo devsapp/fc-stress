@@ -8,7 +8,7 @@ import { FcStress } from './lib/stress';
 import { ServerlessProfile } from './lib/profile';
 import { HttpTypeOption, EventTypeOption, StressOption } from './lib/interface';
 import { payloadPriority } from './lib/utils/file';
-import { STRESS_HELP_INFO, CLEAN_HELP_INFO } from './lib/static';
+import { START_HELP_INFO, CLEAN_HELP_INFO } from './lib/static';
 
 export default class FcStressComponent extends BaseComponent {
   constructor(props) {
@@ -24,7 +24,7 @@ export default class FcStressComponent extends BaseComponent {
         logger.warning(StdoutFormatter.stdoutFormatter.warn('get credential', `failed, access is: ${access}`));
         logger.debug(`Get credentials error: ${e}`);
       }
-      
+
     }
     core.reportComponent(componentName, {
       command,
@@ -38,7 +38,7 @@ export default class FcStressComponent extends BaseComponent {
   private argsParser(inputs: InputProps): any {
     const apts: any = {
       boolean: ['help', 'assume-yes'],
-      alias: { 
+      alias: {
         'help': 'h',
         'region': 'r',
         'access': 'a',
@@ -53,7 +53,7 @@ export default class FcStressComponent extends BaseComponent {
 
     // 将Args转成Object
     comParse.data = comParse.data || {};
-    const { 
+    const {
       region,
       access,
       qualifier,
@@ -78,11 +78,11 @@ export default class FcStressComponent extends BaseComponent {
   }
 
   /**
-   * stress test
+   * start stress test
    * @param inputs
    * @returns
    */
-  public async stress(inputs: InputProps): Promise<any> {
+  public async start(inputs: InputProps): Promise<any> {
     await StdoutFormatter.initStdout();
     const {
       region, access, qualifier, url, method,
@@ -91,11 +91,11 @@ export default class FcStressComponent extends BaseComponent {
     } = this.argsParser(inputs);
     await this.report('fc-stress', 'stress', null, access);
     if (help) {
-      core.help(STRESS_HELP_INFO);
+      core.help(START_HELP_INFO);
       return;
     }
     const creds: ICredentials = await core.getCredential(access);
-    
+
     const serverlessProfile: ServerlessProfile = {
       project: {
         access,
@@ -145,7 +145,7 @@ export default class FcStressComponent extends BaseComponent {
       stressVm.fail(`Stress test error.`);
       throw e;
     }
-    
+
     // 展示结果
     let data: any = invokeRes?.data;
     if (_.isString(data)) {
@@ -183,7 +183,7 @@ export default class FcStressComponent extends BaseComponent {
       appName: inputs?.appName
     };
     const fcStress: FcStress = new FcStress(serverlessProfile, creds, region, null, null, null, inputs?.path?.configPath);
-    
+
     logger.info(`Cleaning helper resource and local html report files...`);
     await fcStress.clean(assumeYes);
   }

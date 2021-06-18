@@ -363,7 +363,7 @@
 				},
 				{
 					"id": 14,
-					"name": "stress",
+					"name": "start",
 					"kind": 2048,
 					"kindString": "Method",
 					"flags": {
@@ -373,18 +373,18 @@
 						{
 							"fileName": "index.ts",
 							"line": 85,
-							"character": 21
+							"character": 20
 						}
 					],
 					"signatures": [
 						{
 							"id": 15,
-							"name": "stress",
+							"name": "start",
 							"kind": 4096,
 							"kindString": "Call signature",
 							"flags": {},
 							"comment": {
-								"shortText": "stress test",
+								"shortText": "start stress test",
 								"returns": "\n"
 							},
 							"parameters": [
