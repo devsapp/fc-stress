@@ -188,11 +188,11 @@ export class FcStress extends IInputsBase{
     if (this.isEventFunctionType()) {
       cacheHtmlFileName = `${this.eventTypeOpts.serviceName}.${this.eventTypeOpts.qualifier}-${this.eventTypeOpts.functionName}#${curTimestamp}.html`;
     } else if (this.isHttpFunctionType()) {
-      cacheHtmlFileName = `url#${curTimestamp}`;
+      cacheHtmlFileName = `url#${curTimestamp}.html`;
     }
     const cacheHtmlFilePath: string = path.join(FcStress.defaultHtmlCacheDir, cacheHtmlFileName || '');
     await fse.writeFile(cacheHtmlFilePath, htmlContent, {mode: 0o777, flag: 'w'});
-    logger.log(`Html report flie: ${cacheHtmlFilePath}\nOpen it for html report with browser.`, 'yellow');
+    logger.log(`Html report flie: ${cacheHtmlFilePath}\nExecute 'open ${cacheHtmlFilePath}' on macos for html report with browser.`, 'yellow');
   }
 
   public async clean(assumeYes?: boolean): Promise<any> {
