@@ -148,6 +148,7 @@ export default class FcStressComponent extends BaseComponent {
 
     // 展示结果
     let data: any = invokeRes?.data;
+    
     if (_.isString(data)) {
       data = JSON.parse(data);
     }

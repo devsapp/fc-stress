@@ -213,5 +213,8 @@ export class FcStress extends IInputsBase{
       }
       throw new Error(`Helper function error type: ${data?.errorType}, error message: ${data?.errorMessage}`);
     }
+    if (_.isString(data) && _.toLower(data).includes('error')) {
+      throw new Error(data);
+    }
   }
 }

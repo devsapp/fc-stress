@@ -3,6 +3,7 @@ import logging
 import time, json
 import os
 from bs4 import BeautifulSoup
+from urllib.parse import urlparse
 
 def handler(event, context):
   os.system("rm -rf /tmp/report.html")
@@ -32,7 +33,8 @@ def handler(event, context):
   else: # dsp init 生成的 http trigger 函数必须是匿名可访问的
     url = evt['url']
     if host not in url:
-      return "Arg Error: url must contains host={}".format(host)
+      res = urlparse(url)
+      host = res.netloc
     method = evt.get("method", "GET")
     body = json.dumps(evt.get("body", b""))
     cmd = "export FC_URL={0} && export FC_METHOD={1} && export FC_PAYLOAD={2} && \
