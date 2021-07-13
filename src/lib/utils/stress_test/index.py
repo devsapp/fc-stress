@@ -15,6 +15,7 @@ def handler(event, context):
   host = "{}.{}.fc.aliyuncs.com".format(context.account_id, context.region)
   # get function type
   funcType = evt.get("functionType", "event")
+
   if funcType == "event":
     srv = evt['serviceName']
     func = evt['functionName']
@@ -25,7 +26,7 @@ def handler(event, context):
     if security_token == "undefined":
       security_token = ""
     print(creds.to_dict())
-    cmd = "export AK_ID={0} && export AK_SECRET={1} && export AK_TOKEN={2} && \
+    cmd = "export AK_ID={0} && export AK_SECRET={1} && export AK_TOKEN={2} && export TZ=Asia/Shanghai &&\
           export FC_SER={3} && export FC_FUNC={4} && export FC_QUALIFIER={5} && export FC_HTTP_PAYLOAD={6} && \
           locust -f locustfile.py -H http://{7} -u {8} -r {9} -t {10}s --headless --html /tmp/report.html" \
           .format(access_key_id, access_key_secret, security_token, srv, func, qualifier, payload, host,
@@ -37,7 +38,7 @@ def handler(event, context):
       host = res.netloc
     method = evt.get("method", "GET")
     body = json.dumps(evt.get("body", b""))
-    cmd = "export FC_URL={0} && export FC_METHOD={1} && export FC_PAYLOAD={2} && \
+    cmd = "export FC_URL={0} && export FC_METHOD={1} && export FC_PAYLOAD={2} && export TZ=Asia/Shanghai &&\
           locust -f locustfile_http.py -H http://{3} -u {4} -r {5} -t {6}s --headless --html /tmp/report.html" \
           .format(url, method, body, host, num_users, spawn_rate, runtime)
 

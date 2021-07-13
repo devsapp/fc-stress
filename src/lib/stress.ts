@@ -41,7 +41,8 @@ export class FcStress extends IInputsBase{
     timeout: 600,
     environmentVariables: {
       PATH: "/code/.s/root/usr/local/bin:/code/.s/root/usr/local/sbin:/code/.s/root/usr/bin:/code/.s/root/usr/sbin:/code/.s/root/sbin:/code/.s/root/bin:/code:/code/node_modules/.bin:/code/.s/python/bin:/code/.s/node_modules/.bin:/usr/local/bin:/usr/local/sbin:/usr/bin:/usr/sbin:/sbin:/bin",
-      PYTHONUSERBASE: "/code/.s/python"
+      PYTHONUSERBASE: "/code/.s/python",
+      TZ: "Asia/Shanghai"
     }
   }
   private static readonly defaultStressOpts: StressOption = {
