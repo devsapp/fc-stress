@@ -14,6 +14,7 @@ import { promptForConfirmContinue } from './utils/prompt';
 import _ from 'lodash';
 import * as rimraf from 'rimraf';
 import tryRequire from 'try-require';
+import sd from 'silly-datetime';
 const pkg = tryRequire(path.join(__dirname, '..', '..', 'package.json'));
 const VERSION: string = pkg?.version || '0.0.0';
 
@@ -187,7 +188,7 @@ export class FcStress extends IInputsBase{
     const htmlContent: string = data.report_html;
     await fse.ensureDir(FcStress.defaultHtmlCacheDir);
     let cacheHtmlFileName: string;
-    const curTimestamp: string = new Date().toISOString();
+    const curTimestamp: string = sd.format(new Date(), 'YYYY-MM-DDTHH:mm:ss');
     if (this.isEventFunctionType()) {
       cacheHtmlFileName = `${this.eventTypeOpts.serviceName}.${this.eventTypeOpts.qualifier}-${this.eventTypeOpts.functionName}#${curTimestamp}.html`;
     } else if (this.isHttpFunctionType()) {
