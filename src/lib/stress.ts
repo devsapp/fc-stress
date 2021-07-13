@@ -13,6 +13,9 @@ import { HttpTypeOption, EventTypeOption, StressOption } from './interface';
 import { promptForConfirmContinue } from './utils/prompt';
 import _ from 'lodash';
 import * as rimraf from 'rimraf';
+import tryRequire from 'try-require';
+const pkg = tryRequire(path.join(__dirname, '..', '..', 'package.json'));
+const VERSION: string = pkg?.version || '0.0.0';
 
 export class FcStress extends IInputsBase{
   private readonly httpTypeOpts?: HttpTypeOption;
@@ -21,7 +24,7 @@ export class FcStress extends IInputsBase{
   private readonly fcClient: FcClient;
 
   private static readonly supportedFunctionTypes: string[] = ['event', 'http'];
-  private static readonly defaultCacheDir: string = path.join(os.homedir(), '.s', 'cache', 'fc-stress');
+  private static readonly defaultCacheDir: string = path.join(os.homedir(), '.s', 'cache', 'fc-stress', VERSION);
   private static readonly defaultHtmlCacheDir: string = path.join(FcStress.defaultCacheDir, 'html');
   // 辅助函数被部署过的 region 列表，表示在目标 region 已经部署过该版本组件对应的辅助函数
   private static readonly helperFunctionDeployedRegionFile: string = path.join(FcStress.defaultCacheDir, 'region.json');

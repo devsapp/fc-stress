@@ -42,6 +42,8 @@
     "lodash.get": "^4.4.2",
     "progress": "^2.0.3",
     "rimraf": "^3.0.2",
+    "silly-datetime": "^0.1.2",
+    "try-require": "^1.2.1",
     "tty-table": "^4.1.3"
   },
   "devDependencies": {
