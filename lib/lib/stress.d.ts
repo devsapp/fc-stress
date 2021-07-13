@@ -8,6 +8,7 @@ export declare class FcStress extends IInputsBase {
     private readonly fcClient;
     private static readonly supportedFunctionTypes;
     private static readonly defaultCacheDir;
+    private static readonly defaultVersionCacheDir;
     private static readonly defaultHtmlCacheDir;
     private static readonly helperFunctionDeployedRegionFile;
     private static readonly defaultServiceName;

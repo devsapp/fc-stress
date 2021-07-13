@@ -25,10 +25,11 @@ export class FcStress extends IInputsBase{
   private readonly fcClient: FcClient;
 
   private static readonly supportedFunctionTypes: string[] = ['event', 'http'];
-  private static readonly defaultCacheDir: string = path.join(os.homedir(), '.s', 'cache', 'fc-stress', VERSION);
+  private static readonly defaultCacheDir: string = path.join(os.homedir(), '.s', 'cache', 'fc-stress');
+  private static readonly defaultVersionCacheDir: string = path.join(FcStress.defaultCacheDir, VERSION);
   private static readonly defaultHtmlCacheDir: string = path.join(FcStress.defaultCacheDir, 'html');
   // 辅助函数被部署过的 region 列表，表示在目标 region 已经部署过该版本组件对应的辅助函数
-  private static readonly helperFunctionDeployedRegionFile: string = path.join(FcStress.defaultCacheDir, 'region.json');
+  private static readonly helperFunctionDeployedRegionFile: string = path.join(FcStress.defaultVersionCacheDir, 'region.json');
   private static readonly defaultServiceName: string = `_DEFAULT_FC_STRESS_COMPONENT_SERVICE`;
   private static readonly defaultRoleName: string = `DEFAULT-FC-STRESS-COMPONENT-ROLE`;
   private static readonly defaultFunctionProp: any = {
@@ -147,7 +148,7 @@ export class FcStress extends IInputsBase{
   }
 
   private async makeHelpFunctionDeployedRegionFile(): Promise<void> {
-    await fse.ensureDir(FcStress.defaultCacheDir);
+    await fse.ensureDir(path.dirname(FcStress.helperFunctionDeployedRegionFile));
     let regionList: string[] = [];
     if (await fse.pathExists(FcStress.helperFunctionDeployedRegionFile)) {
       // append
