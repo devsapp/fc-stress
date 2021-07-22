@@ -190,14 +190,14 @@ export class FcStress extends IInputsBase{
     const htmlContent: string = data.report_html;
     await fse.ensureDir(FcStress.defaultHtmlCacheDir);
     let cacheHtmlFileName: string;
-    const curTimestamp: string = sd.format(new Date(), 'YYYY-MM-DDTHH:mm:ss');
+    const curTimestamp: string = sd.format(new Date(), 'YYYY-MM-DDTHH-mm-ss');
     if (this.isEventFunctionType()) {
       cacheHtmlFileName = `${this.eventTypeOpts.serviceName}.${this.eventTypeOpts.qualifier}-${this.eventTypeOpts.functionName}#${curTimestamp}.html`;
     } else if (this.isHttpFunctionType()) {
       cacheHtmlFileName = `url#${curTimestamp}.html`;
     }
     const cacheHtmlFilePath: string = path.join(FcStress.defaultHtmlCacheDir, cacheHtmlFileName || '');
-    await fse.writeFile(cacheHtmlFilePath, htmlContent, {mode: 0o777, flag: 'w'});
+    await fse.writeFile(cacheHtmlFilePath, htmlContent, {flag: 'w'});
     logger.log(`Html report flie: ${cacheHtmlFilePath}\nExecute 'open ${cacheHtmlFilePath}' on macos for html report with browser.`, 'yellow');
   }
 
