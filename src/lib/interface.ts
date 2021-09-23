@@ -3,6 +3,7 @@ export interface StressOption {
   spawnRate?: number;
   runningTime?: number;
   functionType: string;
+  invocationType?: string;
 }
 export interface HttpTypeOption {
   url: number;

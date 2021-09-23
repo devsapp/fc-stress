@@ -15,11 +15,12 @@ def handler(event, context):
   report_html = evt.get("REPORT_HTML", False)
   host = "{}.{}.fc.aliyuncs.com".format(context.account_id, context.region)
 
-  hostForRequest = host if custom_host is None else custom_host
+  host_for_request = host if custom_host is None else custom_host
   # get function type
-  funcType = evt.get("functionType", "event")
+  function_type = evt.get("functionType", "event")
+  invocation_type = evt.get("INVOCATION_TYPE", "Sync")
 
-  if funcType == "event":
+  if function_type == "event":
     srv = evt['serviceName']
     func = evt['functionName']
     qualifier = evt.get("qualifier", "LATEST")
@@ -30,19 +31,20 @@ def handler(event, context):
       security_token = ""
     print(creds.to_dict())
     cmd = "export AK_ID={0} && export AK_SECRET={1} && export AK_TOKEN={2} && export TZ=Asia/Shanghai &&\
-           export FC_SER={3} && export FC_FUNC={4} && export FC_QUALIFIER={5} && export FC_HTTP_PAYLOAD={6} && export ACCOUNT_ID={7} &&\
-           locust -f locustfile.py -H http://{8} -u {9} -r {10} -t {11}s --headless --html /tmp/report.html" \
-          .format(access_key_id, access_key_secret, security_token, srv, func, qualifier, payload, account_id, hostForRequest, num_users, spawn_rate, runtime)
+            export FC_SER={3} && export FC_FUNC={4} && export FC_QUALIFIER={5} && export FC_HTTP_PAYLOAD={6} && \
+           export ACCOUNT_ID={7} && export INVOCATION_TYPE={8} && \
+           locust -f locustfile.py -H http://{9} -u {10} -r {11} -t {12}s --headless --html /tmp/report.html" \
+          .format(access_key_id, access_key_secret, security_token, srv, func, qualifier, payload, account_id, invocation_type, host_for_request, num_users, spawn_rate, runtime)
   else: # dsp init 生成的 http trigger 函数必须是匿名可访问的
     url = evt['url']
-    if hostForRequest not in url:
+    if host_for_request not in url:
       res = urlparse(url)
-      hostForRequest = res.netloc
+      host_for_request = res.netloc
     method = evt.get("method", "GET")
     body = json.dumps(evt.get("body", b""))
     cmd = "export FC_URL={0} && export FC_METHOD={1} && export FC_PAYLOAD={2} && export TZ=Asia/Shanghai &&\
           locust -f locustfile_http.py -H http://{3} -u {4} -r {5} -t {6}s --headless --html /tmp/report.html" \
-          .format(url, method, body, hostForRequest, num_users, spawn_rate, runtime)
+          .format(url, method, body, host_for_request, num_users, spawn_rate, runtime)
 
   os.system(cmd)
   return getStatistics(report_html)

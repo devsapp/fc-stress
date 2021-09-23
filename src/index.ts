@@ -10,6 +10,7 @@ import { HttpTypeOption, EventTypeOption, StressOption } from './lib/interface';
 import { payloadPriority } from './lib/utils/file';
 import { START_HELP_INFO, CLEAN_HELP_INFO } from './lib/static';
 import {getEndpointFromFcDefault} from "./lib/utils/endpoint";
+import {capitalizeFirstLetter} from "./lib/utils/utils";
 
 export default class FcStressComponent extends BaseComponent {
   constructor(props) {
@@ -71,10 +72,11 @@ export default class FcStressComponent extends BaseComponent {
     const spawnRate: number = _.toInteger(comParse.data['spawn-rate']);
     const runningTime: number = _.toInteger(comParse.data['run-time']);
     const payloadFile: string = comParse.data['payload-file'];
+    const invocationType: string = capitalizeFirstLetter(_.toLower(comParse.data['invocation-type'])) || 'Sync';
     return {
       region, access, qualifier, url, method,
       payload, help, functionName, serviceName, functionType,
-      numUser, spawnRate, runningTime,payloadFile, assumeYes
+      numUser, spawnRate, runningTime,payloadFile, assumeYes, invocationType
     };
   }
 
@@ -88,7 +90,7 @@ export default class FcStressComponent extends BaseComponent {
     const {
       region, access, qualifier, url, method,
       payload, help, functionName, serviceName, functionType,
-      numUser, spawnRate, runningTime, payloadFile
+      numUser, spawnRate, runningTime, payloadFile, invocationType
     } = this.argsParser(inputs);
     await this.report('fc-stress', 'stress', null, access);
     if (help) {
@@ -108,7 +110,8 @@ export default class FcStressComponent extends BaseComponent {
       numUser,
       spawnRate,
       runningTime,
-      functionType
+      functionType,
+      invocationType,
     };
     logger.info(`Reading payload content...`)
     const payloadContent = await payloadPriority(payload, payloadFile);

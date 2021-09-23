@@ -18,6 +18,7 @@ functionName = os.environ.get("FC_FUNC", "")
 qualifier = os.environ.get("FC_QUALIFIER", "")
 httpPayLoad = os.environ.get("FC_HTTP_PAYLOAD", b"")
 account_id = os.environ.get("ACCOUNT_ID", "")
+invocation_type = os.environ.get("INVOCATION_TYPE", "Sync")
 
 def build_common_headers(host, method, path, customHeaders={}, unescaped_queries=None):
     auth = Auth(access_key_id, access_key_secret, security_token)
@@ -34,7 +35,8 @@ def build_common_headers(host, method, path, customHeaders={}, unescaped_queries
         'content-type': 'application/json',
         'content-length': '0',
         'user-agent': "aliyun-fc-sdk-locust",
-        'x-fc-account-id': account_id
+        'x-fc-account-id': account_id,
+        'x-fc-invocation-type': invocation_type
     }
 
     if auth.security_token != '':
