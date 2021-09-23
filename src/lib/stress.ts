@@ -1,7 +1,6 @@
 import { ICredentials } from '../common/entity';
 import { FcClient } from './fc';
 import * as path from 'path';
-import { RamComponent } from './component/ram';
 import { replaceProjectName, ServerlessProfile, IInputsBase } from './profile';
 import * as core from '@serverless-devs/core';
 import logger from '../common/logger';
@@ -9,12 +8,15 @@ import * as yaml from 'js-yaml';
 import os from 'os';
 import * as fse from 'fs-extra';
 import StdoutFormatter from './component/stdout-formatter';
-import { HttpTypeOption, EventTypeOption, StressOption } from './interface';
+import { HttpTypeOption, EventTypeOption, StressOption } from './interface/interface';
 import { promptForConfirmContinue } from './utils/prompt';
 import _ from 'lodash';
 import * as rimraf from 'rimraf';
 import tryRequire from 'try-require';
 import sd from 'silly-datetime';
+import {ServiceConfig} from "./interface/fc-service";
+import {FunctionConfig} from "./interface/fc-function";
+import {FcDeployComponent} from "./component/fc-deploy";
 const pkg = tryRequire(path.join(__dirname, '..', '..', 'package.json'));
 const VERSION: string = pkg?.version || '0.0.0';
 
@@ -24,6 +26,7 @@ export class FcStress extends IInputsBase{
   private readonly stressOpts?: StressOption;
   private readonly fcClient: FcClient;
 
+  private static readonly fcDefaultRoleName: string = 'AliyunFCDefaultRole';
   private static readonly supportedFunctionTypes: string[] = ['event', 'http'];
   private static readonly defaultCacheDir: string = path.join(os.homedir(), '.s', 'cache', 'fc-stress');
   private static readonly defaultVersionCacheDir: string = path.join(FcStress.defaultCacheDir, VERSION);
@@ -31,10 +34,8 @@ export class FcStress extends IInputsBase{
   // 辅助函数被部署过的 region 列表，表示在目标 region 已经部署过该版本组件对应的辅助函数
   private static readonly helperFunctionDeployedRegionFile: string = path.join(FcStress.defaultVersionCacheDir, 'region.json');
   private static readonly defaultServiceName: string = `_DEFAULT_FC_STRESS_COMPONENT_SERVICE`;
-  private static readonly defaultRoleName: string = `DEFAULT-FC-STRESS-COMPONENT-ROLE`;
-  private static readonly defaultFunctionProp: any = {
-    functionName: `_DEFAULT_FC_STRESS_COMPONENT_SERVICE`,
-    serviceName: FcStress.defaultServiceName,
+  private static readonly defaultFunctionProp: FunctionConfig = {
+    name: `_DEFAULT_FC_STRESS_COMPONENT_SERVICE`,
     handler: 'index.handler',
     runtime: 'python3',
     codeUri: path.join(__dirname, 'utils', 'stress_test', 'code.zip'),
@@ -46,7 +47,7 @@ export class FcStress extends IInputsBase{
       TZ: "Asia/Shanghai",
       LD_LIBRARY_PATH: '/code/'
     }
-  }
+  };
   private static readonly defaultStressOpts: StressOption = {
     functionType: '',
     numUser: 6,
@@ -55,8 +56,8 @@ export class FcStress extends IInputsBase{
     invocationType: 'Sync'
   }
 
-  constructor(serverlessProfile: ServerlessProfile, creds: ICredentials, region: string, stressOpts?: StressOption, httpTypeOpts?: HttpTypeOption, eventTypeOpts?: EventTypeOption, curPath?: string, args?: string, endpoint?: string) {
-    super(serverlessProfile, region, creds, curPath, args);
+  constructor(serverlessProfile: ServerlessProfile, creds: ICredentials, region: string, stressOpts?: StressOption, httpTypeOpts?: HttpTypeOption, eventTypeOpts?: EventTypeOption, curPath?: any, endpoint?: string) {
+    super(serverlessProfile, region, creds, curPath);
 
     this.stressOpts = stressOpts;
     if (this.stressOpts) {
@@ -86,42 +87,56 @@ export class FcStress extends IInputsBase{
     return true;
   }
 
-  private async makeHelperFunction(roleArn: string): Promise<void> {
-    const defaultServiceProp: any = {
-      serviceName: FcStress.defaultServiceName,
-      role: roleArn
+  private async makeHelperFunction(isDebug?: boolean): Promise<void> {
+    const defaultServiceProp: ServiceConfig = {
+      name: FcStress.defaultServiceName,
+      role: `acs:ram::${this.credentials.AccountID}:role/${FcStress.fcDefaultRoleName}`,
     };
-    await this.fcClient.makeService(defaultServiceProp);
-    await this.fcClient.makeFunction(FcStress.defaultFunctionProp);
+    const profileOfFcdeploy = replaceProjectName(this.serverlessProfile, `${this.serverlessProfile?.project?.projectName}-fc-deploy-project`);
+    // 在调用 fc-deploy 时，保证生成的 .s 文件夹放在 FcStress.helperFunctionDeployedRegionFile 下
+    process.env['templateFile'] = FcStress.helperFunctionDeployedRegionFile;
+    const fcDeployComponent: FcDeployComponent = new FcDeployComponent(
+        profileOfFcdeploy,
+        this.region,
+        this.credentials,
+        defaultServiceProp,
+        FcStress.defaultFunctionProp,
+        null,
+        null,
+        this.curPath,
+    );
+    const agrsOfFcDeploy: string = isDebug ? '--use-local -y --debug' : '--use-local -y';
+    const fcDeployComponentInputs = fcDeployComponent.genComponentInputs('fc-deploy', agrsOfFcDeploy);
+    const fcDeployComponentIns: any = await core.loadComponent(`devsapp/fc-deploy`);
+    await fcDeployComponentIns.deploy(fcDeployComponentInputs);
   }
 
-  private async removeHelperFunction(): Promise<void> {
-    await this.fcClient.removeFunction(FcStress.defaultServiceName, FcStress.defaultFunctionProp.functionName);
-    await this.fcClient.removeService(FcStress.defaultServiceName);
+  private async removeHelperFunction(isDebug?: boolean): Promise<void> {
+    const defaultServiceProp: ServiceConfig = {
+      name: FcStress.defaultServiceName,
+    };
+    const profileOfFcdeploy = replaceProjectName(this.serverlessProfile, `${this.serverlessProfile?.project?.projectName}-fc-deploy-project`);
+
+    const fcDeployComponent: FcDeployComponent = new FcDeployComponent(
+        profileOfFcdeploy,
+        this.region,
+        this.credentials,
+        defaultServiceProp,
+        null,
+        null,
+        null,
+        this.curPath,
+    );
+    const agrsOfFcDeploy: string = isDebug ? '-y --debug' : '-y';
+    const fcDeployComponentInputs = fcDeployComponent.genComponentInputs('fc-deploy', agrsOfFcDeploy);
+    const fcDeployComponentIns: any = await core.loadComponent(`devsapp/fc-deploy`);
+    await fcDeployComponentIns.remove(fcDeployComponentInputs);
   }
 
-  private async makeServiceRole(): Promise<string> {
-    logger.debug(StdoutFormatter.stdoutFormatter.set('role for helper service', FcStress.defaultRoleName));
-    const profileOfRam = replaceProjectName(this.serverlessProfile, `${this.serverlessProfile?.project?.projectName}-ram-project`);
-    const ramComponent = new RamComponent(profileOfRam, {
-      roleName: FcStress.defaultRoleName,
-      resourceName: "fc.aliyuncs.com",
-      assumeRolePolicy: null,
-      attachedPolicies: ['AliyunFCInvocationAccess'],
-      description: `Default role generated by fc-stress component`,
-    }, this.region, this.credentials, this.curPath, this.args);
-    const ramComponentInputs = ramComponent.genComponentInputs('ram');
-    const ramComponentIns = await core.load('devsapp/ram');
-    const roleArn = await ramComponentIns.deploy(ramComponentInputs);
-    return roleArn;
-  }
-
-  public async init() {
+  public async init(isDebug?: boolean) {
     if (await this.checkIfNecessaryToDeployHelper()) {
-      // 初始化所需的角色
-      const roleArn: string = await this.makeServiceRole();
       // 部署辅助函数
-      await this.makeHelperFunction(roleArn);
+      await this.makeHelperFunction(isDebug);
       await this.makeHelpFunctionDeployedRegionFile();
     }
   }
@@ -133,7 +148,7 @@ export class FcStress extends IInputsBase{
     2. 该版本组件对应的辅助函数未被部署过
     */
 
-    if (!await this.fcClient.checkIfFunctionExist(FcStress.defaultServiceName, FcStress.defaultFunctionProp.functionName)) {
+    if (!await this.fcClient.checkIfFunctionExist(FcStress.defaultServiceName, FcStress.defaultFunctionProp.name)) {
       logger.debug(`Helper function not exist online.`)
       return true;
     }
@@ -183,7 +198,7 @@ export class FcStress extends IInputsBase{
       Object.assign(event, this.httpTypeOpts);
     }
     logger.debug(`Event of invoking function is: \n${yaml.dump(event)}`);
-    const invokeRes: any = await this.fcClient.invokeFunction(FcStress.defaultServiceName, FcStress.defaultFunctionProp.functionName, JSON.stringify(event));
+    const invokeRes: any = await this.fcClient.invokeFunction(FcStress.defaultServiceName, FcStress.defaultFunctionProp.name, JSON.stringify(event));
     return invokeRes;
   }
 
@@ -210,9 +225,9 @@ export class FcStress extends IInputsBase{
     logger.log(`Html report flie: ${cacheHtmlFilePath}\nExecute 'open ${cacheHtmlFilePath}' on macos for html report with browser.`, 'yellow');
   }
 
-  public async clean(assumeYes?: boolean): Promise<any> {
+  public async clean(assumeYes?: boolean, isDebug?: boolean): Promise<any> {
     // 删除辅助函数
-    await this.removeHelperFunction();
+    await this.removeHelperFunction(isDebug);
     // TODO：删除 role
     // 删除 html 文件
     const msg: string = `Are you sure to remove all the history html report files under ${FcStress.defaultHtmlCacheDir}?`;

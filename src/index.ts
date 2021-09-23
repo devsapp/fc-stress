@@ -6,7 +6,7 @@ import * as core from '@serverless-devs/core';
 import StdoutFormatter from './lib/component/stdout-formatter';
 import { FcStress } from './lib/stress';
 import { ServerlessProfile } from './lib/profile';
-import { HttpTypeOption, EventTypeOption, StressOption } from './lib/interface';
+import { HttpTypeOption, EventTypeOption, StressOption } from './lib/interface/interface';
 import { payloadPriority } from './lib/utils/file';
 import { START_HELP_INFO, CLEAN_HELP_INFO } from './lib/static';
 import {getEndpointFromFcDefault} from "./lib/utils/endpoint";
@@ -63,7 +63,8 @@ export default class FcStressComponent extends BaseComponent {
       payload,
       help
     } = comParse.data;
-    const access: string = comParse.data.access || inputs?.project?.access;
+    const access: string = comParse.data?.access || inputs?.project?.access;
+    const isDebug = comParse.data.debug || process.env?.temp_params?.includes('--debug');
     const functionName: string = comParse.data['function-name'];
     const serviceName: string = comParse.data['service-name'];
     const functionType: string = comParse.data['function-type'];
@@ -74,7 +75,7 @@ export default class FcStressComponent extends BaseComponent {
     const payloadFile: string = comParse.data['payload-file'];
     const invocationType: string = capitalizeFirstLetter(_.toLower(comParse.data['invocation-type'])) || 'Sync';
     return {
-      region, access, qualifier, url, method,
+      region, access, qualifier, url, method, isDebug,
       payload, help, functionName, serviceName, functionType,
       numUser, spawnRate, runningTime,payloadFile, assumeYes, invocationType
     };
@@ -88,7 +89,7 @@ export default class FcStressComponent extends BaseComponent {
   public async start(inputs: InputProps): Promise<any> {
     await StdoutFormatter.initStdout();
     const {
-      region, access, qualifier, url, method,
+      region, access, qualifier, url, method, isDebug,
       payload, help, functionName, serviceName, functionType,
       numUser, spawnRate, runningTime, payloadFile, invocationType
     } = this.argsParser(inputs);
@@ -133,13 +134,13 @@ export default class FcStressComponent extends BaseComponent {
       });
     }
     const endpoint: string = await getEndpointFromFcDefault();
-    const fcStress: FcStress = new FcStress(serverlessProfile, creds, region, stressOpts, httpTypeOpts, eventTypeOpts, inputs?.path?.configPath, null, endpoint);
+    const fcStress: FcStress = new FcStress(serverlessProfile, creds, region, stressOpts, httpTypeOpts, eventTypeOpts, inputs?.path, endpoint);
     if (!fcStress.validate()) {
       return;
     }
     // 部署辅助函数
     logger.info(`Preparing helper reource for stress test.`);
-    await fcStress.init();
+    await fcStress.init(isDebug);
     // 调用函数
     let invokeRes: any;
     const stressVm = core.spinner(`Stress test...`);
@@ -172,7 +173,7 @@ export default class FcStressComponent extends BaseComponent {
    */
    public async clean(inputs: InputProps): Promise<any> {
     const {
-      region, access, help, assumeYes
+      region, access, help, assumeYes, isDebug
     } = this.argsParser(inputs);
     const creds: ICredentials = await core.getCredential(access);
     await this.report('fc-stress', 'clean', null, access);
@@ -189,10 +190,10 @@ export default class FcStressComponent extends BaseComponent {
       appName: inputs?.appName
     };
     const endpoint: string = await getEndpointFromFcDefault();
-    const fcStress: FcStress = new FcStress(serverlessProfile, creds, region, null, null, null, inputs?.path?.configPath, null, endpoint);
+    const fcStress: FcStress = new FcStress(serverlessProfile, creds, region, null, null, null, inputs?.path?.configPath, endpoint);
 
     logger.info(`Cleaning helper resource and local html report files...`);
-    await fcStress.clean(assumeYes);
+    await fcStress.clean(assumeYes, isDebug);
   }
 
 }
