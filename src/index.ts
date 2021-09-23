@@ -9,6 +9,7 @@ import { ServerlessProfile } from './lib/profile';
 import { HttpTypeOption, EventTypeOption, StressOption } from './lib/interface';
 import { payloadPriority } from './lib/utils/file';
 import { START_HELP_INFO, CLEAN_HELP_INFO } from './lib/static';
+import {getEndpointFromFcDefault} from "./lib/utils/endpoint";
 
 export default class FcStressComponent extends BaseComponent {
   constructor(props) {
@@ -55,13 +56,13 @@ export default class FcStressComponent extends BaseComponent {
     comParse.data = comParse.data || {};
     const {
       region,
-      access,
       qualifier,
       url,
       method,
       payload,
       help
     } = comParse.data;
+    const access: string = comParse.data.access || inputs?.project?.access;
     const functionName: string = comParse.data['function-name'];
     const serviceName: string = comParse.data['service-name'];
     const functionType: string = comParse.data['function-type'];
@@ -128,7 +129,8 @@ export default class FcStressComponent extends BaseComponent {
         body: payloadContent
       });
     }
-    const fcStress: FcStress = new FcStress(serverlessProfile, creds, region, stressOpts, httpTypeOpts, eventTypeOpts, inputs?.path?.configPath);
+    const endpoint: string = await getEndpointFromFcDefault();
+    const fcStress: FcStress = new FcStress(serverlessProfile, creds, region, stressOpts, httpTypeOpts, eventTypeOpts, inputs?.path?.configPath, null, endpoint);
     if (!fcStress.validate()) {
       return;
     }
@@ -139,7 +141,7 @@ export default class FcStressComponent extends BaseComponent {
     let invokeRes: any;
     const stressVm = core.spinner(`Stress test...`);
     try {
-      invokeRes = await fcStress.invoke();
+      invokeRes = await fcStress.invoke(endpoint);
       stressVm.succeed(`Stress test complete.`);
     } catch (e) {
       stressVm.fail(`Stress test error.`);
@@ -148,7 +150,7 @@ export default class FcStressComponent extends BaseComponent {
 
     // 展示结果
     let data: any = invokeRes?.data;
-    
+
     if (_.isString(data)) {
       data = JSON.parse(data);
     }
@@ -183,7 +185,8 @@ export default class FcStressComponent extends BaseComponent {
       },
       appName: inputs?.appName
     };
-    const fcStress: FcStress = new FcStress(serverlessProfile, creds, region, null, null, null, inputs?.path?.configPath);
+    const endpoint: string = await getEndpointFromFcDefault();
+    const fcStress: FcStress = new FcStress(serverlessProfile, creds, region, null, null, null, inputs?.path?.configPath, null, endpoint);
 
     logger.info(`Cleaning helper resource and local html report files...`);
     await fcStress.clean(assumeYes);
