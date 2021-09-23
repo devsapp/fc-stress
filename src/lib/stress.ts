@@ -51,7 +51,8 @@ export class FcStress extends IInputsBase{
     functionType: '',
     numUser: 6,
     spawnRate: 10,
-    runningTime: 30
+    runningTime: 30,
+    invocationType: 'Sync'
   }
 
   constructor(serverlessProfile: ServerlessProfile, creds: ICredentials, region: string, stressOpts?: StressOption, httpTypeOpts?: HttpTypeOption, eventTypeOpts?: EventTypeOption, curPath?: string, args?: string, endpoint?: string) {
@@ -62,6 +63,7 @@ export class FcStress extends IInputsBase{
       this.stressOpts.numUser = this.stressOpts.numUser || FcStress.defaultStressOpts.numUser;
       this.stressOpts.spawnRate = this.stressOpts.spawnRate || FcStress.defaultStressOpts.spawnRate;
       this.stressOpts.runningTime = this.stressOpts.runningTime || FcStress.defaultStressOpts.runningTime;
+      this.stressOpts.invocationType = this.stressOpts.invocationType || FcStress.defaultStressOpts.invocationType;
       logger.info(StdoutFormatter.stdoutFormatter.using('stress options', `\n${yaml.dump(this.stressOpts)}`));
     }
     this.httpTypeOpts = httpTypeOpts;
@@ -167,6 +169,7 @@ export class FcStress extends IInputsBase{
       RUN_TIME: this.stressOpts.runningTime,
       REPORT_HTML: true,
       functionType: this.stressOpts.functionType,
+      INVOCATION_TYPE: this.stressOpts.invocationType,
     };
     if (endpoint) {
       Object.assign(event, {

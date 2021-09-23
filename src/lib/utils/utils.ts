@@ -20,3 +20,7 @@ export function createProgressBar(format, options) {
   };
   return bar;
 }
+
+export function capitalizeFirstLetter(string) {
+  return string.charAt(0).toUpperCase() + string.slice(1);
+}
