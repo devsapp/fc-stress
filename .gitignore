@@ -1,5 +1,5 @@
 node_modules
-.s
+**/.s
 !src/lib/utils/stress_test/.s
 !lib/lib/utils/stress_test/.s
 package-lock.json
