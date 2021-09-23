@@ -11,8 +11,11 @@ def handler(event, context):
   num_users = evt["NUM_USERS"]
   spawn_rate = evt["SPAWN_RATE"]
   runtime = evt["RUN_TIME"]
+  custom_host = evt.get("CUSTOM_HOST", None)
   report_html = evt.get("REPORT_HTML", False)
   host = "{}.{}.fc.aliyuncs.com".format(context.account_id, context.region)
+
+  hostForRequest = host if custom_host is None else custom_host
   # get function type
   funcType = evt.get("functionType", "event")
 
@@ -22,25 +25,24 @@ def handler(event, context):
     qualifier = evt.get("qualifier", "LATEST")
     payload = json.dumps(evt.get("payload", b""))
     creds = context.credentials
-    access_key_id, access_key_secret, security_token = creds.access_key_id, creds.access_key_secret, creds.security_token
+    access_key_id, access_key_secret, security_token, account_id = creds.access_key_id, creds.access_key_secret, creds.security_token, context.account_id
     if security_token == "undefined":
       security_token = ""
     print(creds.to_dict())
     cmd = "export AK_ID={0} && export AK_SECRET={1} && export AK_TOKEN={2} && export TZ=Asia/Shanghai &&\
-          export FC_SER={3} && export FC_FUNC={4} && export FC_QUALIFIER={5} && export FC_HTTP_PAYLOAD={6} && \
-          locust -f locustfile.py -H http://{7} -u {8} -r {9} -t {10}s --headless --html /tmp/report.html" \
-          .format(access_key_id, access_key_secret, security_token, srv, func, qualifier, payload, host,
-          num_users, spawn_rate, runtime)
+           export FC_SER={3} && export FC_FUNC={4} && export FC_QUALIFIER={5} && export FC_HTTP_PAYLOAD={6} && export ACCOUNT_ID={7} &&\
+           locust -f locustfile.py -H http://{8} -u {9} -r {10} -t {11}s --headless --html /tmp/report.html" \
+          .format(access_key_id, access_key_secret, security_token, srv, func, qualifier, payload, account_id, hostForRequest, num_users, spawn_rate, runtime)
   else: # dsp init 生成的 http trigger 函数必须是匿名可访问的
     url = evt['url']
-    if host not in url:
+    if hostForRequest not in url:
       res = urlparse(url)
-      host = res.netloc
+      hostForRequest = res.netloc
     method = evt.get("method", "GET")
     body = json.dumps(evt.get("body", b""))
     cmd = "export FC_URL={0} && export FC_METHOD={1} && export FC_PAYLOAD={2} && export TZ=Asia/Shanghai &&\
           locust -f locustfile_http.py -H http://{3} -u {4} -r {5} -t {6}s --headless --html /tmp/report.html" \
-          .format(url, method, body, host, num_users, spawn_rate, runtime)
+          .format(url, method, body, hostForRequest, num_users, spawn_rate, runtime)
 
   os.system(cmd)
   return getStatistics(report_html)

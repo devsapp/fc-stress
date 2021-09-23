@@ -43,7 +43,8 @@ export class FcStress extends IInputsBase{
     environmentVariables: {
       PATH: "/code/.s/root/usr/local/bin:/code/.s/root/usr/local/sbin:/code/.s/root/usr/bin:/code/.s/root/usr/sbin:/code/.s/root/sbin:/code/.s/root/bin:/code:/code/node_modules/.bin:/code/.s/python/bin:/code/.s/node_modules/.bin:/usr/local/bin:/usr/local/sbin:/usr/bin:/usr/sbin:/sbin:/bin",
       PYTHONUSERBASE: "/code/.s/python",
-      TZ: "Asia/Shanghai"
+      TZ: "Asia/Shanghai",
+      LD_LIBRARY_PATH: '/code/'
     }
   }
   private static readonly defaultStressOpts: StressOption = {
@@ -53,7 +54,7 @@ export class FcStress extends IInputsBase{
     runningTime: 30
   }
 
-  constructor(serverlessProfile: ServerlessProfile, creds: ICredentials, region: string, stressOpts?: StressOption, httpTypeOpts?: HttpTypeOption, eventTypeOpts?: EventTypeOption, curPath?: string, args?: string) {
+  constructor(serverlessProfile: ServerlessProfile, creds: ICredentials, region: string, stressOpts?: StressOption, httpTypeOpts?: HttpTypeOption, eventTypeOpts?: EventTypeOption, curPath?: string, args?: string, endpoint?: string) {
     super(serverlessProfile, region, creds, curPath, args);
 
     this.stressOpts = stressOpts;
@@ -65,7 +66,7 @@ export class FcStress extends IInputsBase{
     }
     this.httpTypeOpts = httpTypeOpts;
     this.eventTypeOpts = eventTypeOpts;
-    this.fcClient = new FcClient(this.region, this.credentials);
+    this.fcClient = new FcClient(this.region, this.credentials, null, endpoint);
   }
 
   public validate(): boolean {
@@ -159,7 +160,7 @@ export class FcStress extends IInputsBase{
     await fse.writeFile(FcStress.helperFunctionDeployedRegionFile, JSON.stringify(regionList), {flag: 'w', mode: 0o777});
   }
 
-  public async invoke(): Promise<any> {
+  public async invoke(endpoint?: string): Promise<any> {
     const event: any = {
       NUM_USERS: this.stressOpts.numUser,
       SPAWN_RATE: this.stressOpts.spawnRate,
@@ -167,6 +168,11 @@ export class FcStress extends IInputsBase{
       REPORT_HTML: true,
       functionType: this.stressOpts.functionType,
     };
+    if (endpoint) {
+      Object.assign(event, {
+        CUSTOM_HOST: endpoint.replace(/(^\w+:|^)\/\//, ''),
+      })
+    }
 
     if (this.isEventFunctionType()) {
       Object.assign(event, this.eventTypeOpts);
