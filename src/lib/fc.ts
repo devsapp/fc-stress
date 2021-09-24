@@ -13,7 +13,6 @@ export class FcClient {
   private readonly accountID: string;
   static readonly defaultTimeout: number = 600 * 1000;
   constructor(region: string, creds: ICredentials, timeout?: number, endpoint?: string) {
-
     this.client = new FC(creds.AccountID, {
       accessKeyID: creds.AccessKeyID,
       accessKeySecret: creds.AccessKeySecret,

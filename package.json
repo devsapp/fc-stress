@@ -13,21 +13,23 @@
   "author": "Serverless-Devs",
   "contributors": [],
   "license": "MIT",
-  "main": "./lib/index.js",
+  "main": "./dist/index.js",
   "publishConfig": {
     "access": "public"
   },
+  "autoInstall": false,
   "repository": {
     "type": "git",
     "url": "https://github.com/ServerlessTool/express-alibaba"
   },
   "scripts": {
     "start": "npm run watch",
-    "watch": "npm run doc && tsc -w",
-    "publish": "npm run build && s cli platform publish",
-    "build": "rm -rf node_modules && rm -rf package-lock.json && rm -rf lib && npm i && tsc",
-    "postbuild": "npm run doc && mkdir -p lib/lib/utils/stress_test && cd src/lib/utils/stress_test && zip -r -q ../../../../lib/lib/utils/stress_test/code.zip ./",
-    "doc": "npx typedoc src/index.ts --json doc/doc.json --out doc"
+    "watch": "npm run prebuild && npx tsc -w -p tsconfig.json",
+    "prebuild": "npm i rimraf --no-save && rimraf dist && rimraf package-lock.json && rimraf node_modules && npm i",
+    "build": "npm run fix && npm run lint && ncc build src/index.ts -m -e @serverless-devs/core -o dist",
+    "postbuild": "mkdir -p dist/lib/utils/stress_test && cd src/lib/utils/stress_test && zip -r -q ../../../../dist/lib/utils/stress_test/code.zip ./",
+    "lint": "f2elint scan -i ./src",
+    "fix": "f2elint fix -i ./src"
   },
   "dependencies": {
     "@alicloud/fc2": "^2.2.2",
@@ -35,28 +37,25 @@
     "archiver": "^5.3.0",
     "colors": "^1.4.0",
     "fs-extra": "^10.0.0",
-    "i18n": "^0.13.2",
     "inquirer": "^8.1.1",
     "js-yaml": "^4.0.0",
     "lodash": "^4.17.21",
-    "lodash.get": "^4.4.2",
     "progress": "^2.0.3",
     "rimraf": "^3.0.2",
     "silly-datetime": "^0.1.2",
-    "try-require": "^1.2.1",
-    "tty-table": "^4.1.3",
-    "os": "^0.1.2"
+    "try-require": "^1.2.1"
   },
   "devDependencies": {
     "@types/rimraf": "^3.0.0",
     "@types/fs-extra": "^9.0.11",
     "@types/lodash": "^4.14.170",
     "@types/node": "^14.0.23",
-    "@typescript-eslint/eslint-plugin": "^3.10.0",
-    "@typescript-eslint/parser": "^3.10.0",
-    "eslint": "^7.7.0",
-    "ts-node": "^8.10.2",
-    "typedoc": "^0.20.35",
-    "typescript": "^3.9.7"
+    "@types/eslint": "^7.2.6",
+    "@typescript-eslint/eslint-plugin": "^4.31.2",
+    "@typescript-eslint/parser": "^4.31.2",
+    "@vercel/ncc": "^0.24.0",
+    "ts-node": "^9.1.1",
+    "typescript": "^4.4.3",
+    "f2elint": "^0.4.4"
   }
 }

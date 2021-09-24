@@ -29,14 +29,14 @@ export async function payloadPriority(event?: string, eventFile?: string): Promi
 async function getEvent(eventFile): Promise<string> {
   return await new Promise((resolve, reject) => {
     const input: any = fse.createReadStream(eventFile, {
-      encoding: 'utf-8'
+      encoding: 'utf-8',
     });
     const rl = readline.createInterface({
       input,
-      output: process.stdout
+      output: process.stdout,
     });
 
-    let event: string = '';
+    let event = '';
     rl.on('line', (line) => {
       event += line;
     });
@@ -45,10 +45,8 @@ async function getEvent(eventFile): Promise<string> {
       resolve(event);
     });
 
-    rl.on('SIGINT', function () {
-
+    rl.on('SIGINT', () => {
       reject(new Error('^C'));
     });
-  })
-  
+  });
 }
