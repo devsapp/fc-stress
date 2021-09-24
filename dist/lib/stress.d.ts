@@ -1,0 +1,31 @@
+import { ICredentials } from '../common/entity';
+import { ServerlessProfile, IInputsBase } from './profile';
+import { HttpTypeOption, EventTypeOption, StressOption } from './interface/interface';
+export declare class FcStress extends IInputsBase {
+    private readonly httpTypeOpts?;
+    private readonly eventTypeOpts?;
+    private readonly stressOpts?;
+    private readonly fcClient;
+    private static readonly fcDefaultRoleName;
+    private static readonly supportedFunctionTypes;
+    private static readonly defaultCacheDir;
+    private static readonly defaultVersionCacheDir;
+    private static readonly defaultHtmlCacheDir;
+    private static readonly helperFunctionDeployedRegionFile;
+    private static readonly defaultServiceName;
+    private static readonly defaultFunctionProp;
+    private static readonly defaultStressOpts;
+    constructor(serverlessProfile: ServerlessProfile, creds: ICredentials, region: string, stressOpts?: StressOption, httpTypeOpts?: HttpTypeOption, eventTypeOpts?: EventTypeOption, curPath?: any, endpoint?: string);
+    validate(): boolean;
+    private makeHelperFunction;
+    private removeHelperFunction;
+    init(isDebug?: boolean): Promise<void>;
+    private checkIfNecessaryToDeployHelper;
+    private makeHelpFunctionDeployedRegionFile;
+    invoke(endpoint?: string): Promise<any>;
+    isEventFunctionType(): boolean;
+    isHttpFunctionType(): boolean;
+    showHtmlReport(data: any): Promise<void>;
+    clean(assumeYes?: boolean, isDebug?: boolean): Promise<any>;
+    processError(data: any): any;
+}
