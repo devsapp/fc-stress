@@ -1,4 +1,4 @@
 export interface LogConfig {
-    project: string;
-    logstore: string;
+  project: string;
+  logstore: string;
 }

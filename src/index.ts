@@ -1,4 +1,3 @@
-import BaseComponent from './common/base';
 import logger from './common/logger';
 import { InputProps, ICredentials } from './common/entity';
 import * as _ from 'lodash';
@@ -9,13 +8,10 @@ import { ServerlessProfile } from './lib/profile';
 import { HttpTypeOption, EventTypeOption, StressOption } from './lib/interface/interface';
 import { payloadPriority } from './lib/utils/file';
 import { START_HELP_INFO, CLEAN_HELP_INFO } from './lib/static';
-import {getEndpointFromFcDefault} from "./lib/utils/endpoint";
-import {capitalizeFirstLetter} from "./lib/utils/utils";
+import { getEndpointFromFcDefault } from './lib/utils/endpoint';
+import { capitalizeFirstLetter } from './lib/utils/utils';
 
-export default class FcStressComponent extends BaseComponent {
-  constructor(props) {
-    super(props)
-  }
+export default class FcStressComponent {
   private async report(componentName: string, command: string, accountID?: string, access?: string): Promise<void> {
     let uid: string = accountID;
     if (_.isEmpty(accountID)) {
@@ -26,7 +22,6 @@ export default class FcStressComponent extends BaseComponent {
         logger.warning(StdoutFormatter.stdoutFormatter.warn('get credential', `failed, access is: ${access}`));
         logger.debug(`Get credentials error: ${e}`);
       }
-
     }
     core.reportComponent(componentName, {
       command,
@@ -41,15 +36,15 @@ export default class FcStressComponent extends BaseComponent {
     const apts: any = {
       boolean: ['help', 'assume-yes'],
       alias: {
-        'help': 'h',
-        'region': 'r',
-        'access': 'a',
-        'qualifier': 'q',
-        'url': 'u',
-        'method': 'm',
-        'payload': 'p',
+        help: 'h',
+        region: 'r',
+        access: 'a',
+        qualifier: 'q',
+        url: 'u',
+        method: 'm',
+        payload: 'p',
         'payload-file': 'f',
-        'assume-yes': 'y'},
+        'assume-yes': 'y' },
     };
     const comParse: any = core.commandParse(inputs, apts);
 
@@ -61,7 +56,7 @@ export default class FcStressComponent extends BaseComponent {
       url,
       method,
       payload,
-      help
+      help,
     } = comParse.data;
     const access: string = comParse.data?.access || inputs?.project?.access;
     const isDebug = comParse.data.debug || process.env?.temp_params?.includes('--debug');
@@ -75,9 +70,23 @@ export default class FcStressComponent extends BaseComponent {
     const payloadFile: string = comParse.data['payload-file'];
     const invocationType: string = capitalizeFirstLetter(_.toLower(comParse.data['invocation-type'])) || 'Sync';
     return {
-      region, access, qualifier, url, method, isDebug,
-      payload, help, functionName, serviceName, functionType,
-      numUser, spawnRate, runningTime,payloadFile, assumeYes, invocationType
+      region,
+      access,
+      qualifier,
+      url,
+      method,
+      payload,
+      help,
+      functionName,
+      serviceName,
+      functionType,
+      numUser,
+      spawnRate,
+      runningTime,
+      payloadFile,
+      assumeYes,
+      invocationType,
+      isDebug,
     };
   }
 
@@ -86,12 +95,12 @@ export default class FcStressComponent extends BaseComponent {
    * @param inputs
    * @returns
    */
-  public async start(inputs: InputProps): Promise<any> {
+  async start(inputs: InputProps): Promise<any> {
     await StdoutFormatter.initStdout();
     const {
       region, access, qualifier, url, method, isDebug,
       payload, help, functionName, serviceName, functionType,
-      numUser, spawnRate, runningTime, payloadFile, invocationType
+      numUser, spawnRate, runningTime, payloadFile, invocationType,
     } = this.argsParser(inputs);
     await this.report('fc-stress', 'stress', null, access);
     if (help) {
@@ -103,9 +112,9 @@ export default class FcStressComponent extends BaseComponent {
     const serverlessProfile: ServerlessProfile = {
       project: {
         access,
-        projectName: inputs?.project?.projectName
+        projectName: inputs?.project?.projectName,
       },
-      appName: inputs?.appName
+      appName: inputs?.appName,
     };
     const stressOpts: StressOption = {
       numUser,
@@ -114,7 +123,7 @@ export default class FcStressComponent extends BaseComponent {
       functionType,
       invocationType,
     };
-    logger.info(`Reading payload content...`)
+    logger.info('Reading payload content...');
     const payloadContent = await payloadPriority(payload, payloadFile);
 
     let httpTypeOpts: HttpTypeOption = null;
@@ -123,14 +132,14 @@ export default class FcStressComponent extends BaseComponent {
       eventTypeOpts = Object.assign({}, {
         serviceName,
         functionName,
-        qualifier: qualifier || "LATEST",
-        payload: payloadContent
+        qualifier: qualifier || 'LATEST',
+        payload: payloadContent,
       });
     } else if (functionType === 'http') {
       httpTypeOpts = Object.assign({}, {
         url,
         method,
-        body: payloadContent
+        body: payloadContent,
       });
     }
     const endpoint: string = await getEndpointFromFcDefault();
@@ -139,16 +148,16 @@ export default class FcStressComponent extends BaseComponent {
       return;
     }
     // 部署辅助函数
-    logger.info(`Preparing helper reource for stress test.`);
+    logger.info('Preparing helper reource for stress test.');
     await fcStress.init(isDebug);
     // 调用函数
     let invokeRes: any;
-    const stressVm = core.spinner(`Stress test...`);
+    const stressVm = core.spinner('Stress test...');
     try {
       invokeRes = await fcStress.invoke(endpoint);
-      stressVm.succeed(`Stress test complete.`);
+      stressVm.succeed('Stress test complete.');
     } catch (e) {
-      stressVm.fail(`Stress test error.`);
+      stressVm.fail('Stress test error.');
       throw e;
     }
 
@@ -159,7 +168,7 @@ export default class FcStressComponent extends BaseComponent {
       data = JSON.parse(data);
     }
     fcStress.processError(data);
-    logger.info(`Displaying the result of stress test.`);
+    logger.info('Displaying the result of stress test.');
     await fcStress.showHtmlReport(data);
 
     delete data.report_html;
@@ -171,9 +180,9 @@ export default class FcStressComponent extends BaseComponent {
    * @param inputs
    * @returns
    */
-   public async clean(inputs: InputProps): Promise<any> {
+  async clean(inputs: InputProps): Promise<any> {
     const {
-      region, access, help, assumeYes, isDebug
+      region, access, help, assumeYes, isDebug,
     } = this.argsParser(inputs);
     const creds: ICredentials = await core.getCredential(access);
     await this.report('fc-stress', 'clean', null, access);
@@ -185,15 +194,14 @@ export default class FcStressComponent extends BaseComponent {
     const serverlessProfile: ServerlessProfile = {
       project: {
         access,
-        projectName: inputs?.project?.projectName
+        projectName: inputs?.project?.projectName,
       },
-      appName: inputs?.appName
+      appName: inputs?.appName,
     };
     const endpoint: string = await getEndpointFromFcDefault();
     const fcStress: FcStress = new FcStress(serverlessProfile, creds, region, null, null, null, inputs?.path?.configPath, endpoint);
 
-    logger.info(`Cleaning helper resource and local html report files...`);
+    logger.info('Cleaning helper resource and local html report files...');
     await fcStress.clean(assumeYes, isDebug);
   }
-
 }

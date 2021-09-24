@@ -113,8 +113,8 @@ export const START_HELP_INFO = [
   {
     header: 'Examples with CLI',
     content: [
-      `$ s cli fc-stress start --num-user 6 --spawn-rate 10 --run-time 30 --function-type event --service-name myService --function-name myFunction --qualifier myQualifier --payload "hello world" --region myRegion --access myAccess`,
-      `$ s cli fc-stress start --num-user 6 --spawn-rate 10 --run-time 30 --function-type http --url myUrl --method POST --payload "hello world" --region myRegion --access myAccess`,
+      '$ s cli fc-stress start --num-user 6 --spawn-rate 10 --run-time 30 --function-type event --service-name myService --function-name myFunction --qualifier myQualifier --payload "hello world" --region myRegion --access myAccess',
+      '$ s cli fc-stress start --num-user 6 --spawn-rate 10 --run-time 30 --function-type http --url myUrl --method POST --payload "hello world" --region myRegion --access myAccess',
     ],
   },
 ];
@@ -167,7 +167,7 @@ export const CLEAN_HELP_INFO = [
   {
     header: 'Examples with CLI',
     content: [
-      `$ s cli fc-stress clean --region myRegion --access myAccess -y`,
+      '$ s cli fc-stress clean --region myRegion --access myAccess -y',
     ],
   },
 ];

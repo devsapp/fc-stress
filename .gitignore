@@ -1,9 +1,41 @@
-node_modules
-**/.s
-!src/lib/utils/stress_test/.s
-!lib/lib/utils/stress_test/.s
-package-lock.json
-lib/lib/utils/stress_test/code
+# compiled output
+**/node_modules
 
-.idea/
-.vscode/
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# OS
+.DS_Store
+
+# Tests
+/coverage
+/.nyc_output
+
+# IDEs and editors
+/.idea
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+
+# IDE - VSCode
+.vscode
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+**/.s
+**/s.origin.yaml
+!src/lib/utils/stress_test/.s
+**/.env
+package-lock.json
+

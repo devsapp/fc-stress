@@ -1,12 +1,12 @@
 
 import * as _ from 'lodash';
 import { Component } from './component';
-import {ServiceConfig} from "../interface/fc-service";
-import {FunctionConfig} from "../interface/fc-function";
-import {TriggerConfig} from "../interface/fc-trigger";
-import {CustomDomainConfig} from "../interface/fc-custom-domain";
-import {ServerlessProfile} from "../profile";
-import {ICredentials} from "../../common/entity";
+import { ServiceConfig } from '../interface/fc-service';
+import { FunctionConfig } from '../interface/fc-function';
+import { TriggerConfig } from '../interface/fc-trigger';
+import { CustomDomainConfig } from '../interface/fc-custom-domain';
+import { ServerlessProfile } from '../profile';
+import { ICredentials } from '../../common/entity';
 
 export class FcDeployComponent extends Component {
   readonly serviceConf: ServiceConfig;

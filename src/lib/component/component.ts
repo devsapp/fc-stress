@@ -17,7 +17,7 @@ export abstract class Component extends IInputsBase {
       Object.assign(inputs, { path: this.curPath });
     }
     if (!_.isNil(args)) {
-      Object.assign(inputs, { args: args });
+      Object.assign(inputs, { args });
     }
     // @ts-ignore
     delete inputs.Credentials;

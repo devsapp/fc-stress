@@ -14,13 +14,15 @@ import _ from 'lodash';
 import * as rimraf from 'rimraf';
 import tryRequire from 'try-require';
 import sd from 'silly-datetime';
-import {ServiceConfig} from "./interface/fc-service";
-import {FunctionConfig} from "./interface/fc-function";
-import {FcDeployComponent} from "./component/fc-deploy";
+import { ServiceConfig } from './interface/fc-service';
+import { FunctionConfig } from './interface/fc-function';
+import { FcDeployComponent } from './component/fc-deploy';
+import { isNccPath } from './utils/path';
+
 const pkg = tryRequire(path.join(__dirname, '..', '..', 'package.json'));
 const VERSION: string = pkg?.version || '0.0.0';
 
-export class FcStress extends IInputsBase{
+export class FcStress extends IInputsBase {
   private readonly httpTypeOpts?: HttpTypeOption;
   private readonly eventTypeOpts?: EventTypeOption;
   private readonly stressOpts?: StressOption;
@@ -33,28 +35,28 @@ export class FcStress extends IInputsBase{
   private static readonly defaultHtmlCacheDir: string = path.join(FcStress.defaultCacheDir, 'html');
   // 辅助函数被部署过的 region 列表，表示在目标 region 已经部署过该版本组件对应的辅助函数
   private static readonly helperFunctionDeployedRegionFile: string = path.join(FcStress.defaultVersionCacheDir, 'region.json');
-  private static readonly defaultServiceName: string = `_DEFAULT_FC_STRESS_COMPONENT_SERVICE`;
+  private static readonly defaultServiceName: string = '_DEFAULT_FC_STRESS_COMPONENT_SERVICE';
   private static readonly defaultFunctionProp: FunctionConfig = {
-    name: `_DEFAULT_FC_STRESS_COMPONENT_SERVICE`,
+    name: '_DEFAULT_FC_STRESS_COMPONENT_SERVICE',
     handler: 'index.handler',
     runtime: 'python3',
-    codeUri: path.join(__dirname, 'utils', 'stress_test', 'code.zip'),
+    codeUri: isNccPath(__dirname) ? path.join(__dirname, 'lib', 'utils', 'stress_test', 'code.zip') : path.join(__dirname, 'utils', 'stress_test', 'code.zip'),
     memorySize: 3072,
     timeout: 600,
     environmentVariables: {
-      PATH: "/code/.s/root/usr/local/bin:/code/.s/root/usr/local/sbin:/code/.s/root/usr/bin:/code/.s/root/usr/sbin:/code/.s/root/sbin:/code/.s/root/bin:/code:/code/node_modules/.bin:/code/.s/python/bin:/code/.s/node_modules/.bin:/usr/local/bin:/usr/local/sbin:/usr/bin:/usr/sbin:/sbin:/bin",
-      PYTHONUSERBASE: "/code/.s/python",
-      TZ: "Asia/Shanghai",
-      LD_LIBRARY_PATH: '/code/'
-    }
+      PATH: '/code/.s/root/usr/local/bin:/code/.s/root/usr/local/sbin:/code/.s/root/usr/bin:/code/.s/root/usr/sbin:/code/.s/root/sbin:/code/.s/root/bin:/code:/code/node_modules/.bin:/code/.s/python/bin:/code/.s/node_modules/.bin:/usr/local/bin:/usr/local/sbin:/usr/bin:/usr/sbin:/sbin:/bin',
+      PYTHONUSERBASE: '/code/.s/python',
+      TZ: 'Asia/Shanghai',
+      LD_LIBRARY_PATH: '/code/',
+    },
   };
   private static readonly defaultStressOpts: StressOption = {
     functionType: '',
     numUser: 6,
     spawnRate: 10,
     runningTime: 30,
-    invocationType: 'Sync'
-  }
+    invocationType: 'Sync',
+  };
 
   constructor(serverlessProfile: ServerlessProfile, creds: ICredentials, region: string, stressOpts?: StressOption, httpTypeOpts?: HttpTypeOption, eventTypeOpts?: EventTypeOption, curPath?: any, endpoint?: string) {
     super(serverlessProfile, region, creds, curPath);
@@ -72,11 +74,11 @@ export class FcStress extends IInputsBase{
     this.fcClient = new FcClient(this.region, this.credentials, null, endpoint);
   }
 
-  public validate(): boolean {
+  validate(): boolean {
     if (this.stressOpts) {
-      const functionType: string = this.stressOpts.functionType;
+      const { functionType } = this.stressOpts;
       if (!functionType) {
-        logger.error(`Please input function type!`);
+        logger.error('Please input function type!');
         return false;
       }
       if (!_.includes(FcStress.supportedFunctionTypes, functionType)) {
@@ -94,20 +96,20 @@ export class FcStress extends IInputsBase{
     };
     const profileOfFcdeploy = replaceProjectName(this.serverlessProfile, `${this.serverlessProfile?.project?.projectName}-fc-deploy-project`);
     // 在调用 fc-deploy 时，保证生成的 .s 文件夹放在 FcStress.helperFunctionDeployedRegionFile 下
-    process.env['templateFile'] = FcStress.helperFunctionDeployedRegionFile;
+    process.env.templateFile = FcStress.helperFunctionDeployedRegionFile;
     const fcDeployComponent: FcDeployComponent = new FcDeployComponent(
-        profileOfFcdeploy,
-        this.region,
-        this.credentials,
-        defaultServiceProp,
-        FcStress.defaultFunctionProp,
-        null,
-        null,
-        this.curPath,
+      profileOfFcdeploy,
+      this.region,
+      this.credentials,
+      defaultServiceProp,
+      FcStress.defaultFunctionProp,
+      null,
+      null,
+      this.curPath,
     );
     const agrsOfFcDeploy: string = isDebug ? '--use-local -y --debug' : '--use-local -y';
     const fcDeployComponentInputs = fcDeployComponent.genComponentInputs('fc-deploy', agrsOfFcDeploy);
-    const fcDeployComponentIns: any = await core.loadComponent(`devsapp/fc-deploy`);
+    const fcDeployComponentIns: any = await core.loadComponent('devsapp/fc-deploy');
     await fcDeployComponentIns.deploy(fcDeployComponentInputs);
   }
 
@@ -118,22 +120,22 @@ export class FcStress extends IInputsBase{
     const profileOfFcdeploy = replaceProjectName(this.serverlessProfile, `${this.serverlessProfile?.project?.projectName}-fc-deploy-project`);
 
     const fcDeployComponent: FcDeployComponent = new FcDeployComponent(
-        profileOfFcdeploy,
-        this.region,
-        this.credentials,
-        defaultServiceProp,
-        null,
-        null,
-        null,
-        this.curPath,
+      profileOfFcdeploy,
+      this.region,
+      this.credentials,
+      defaultServiceProp,
+      null,
+      null,
+      null,
+      this.curPath,
     );
     const agrsOfFcDeploy: string = isDebug ? '-y --debug' : '-y';
     const fcDeployComponentInputs = fcDeployComponent.genComponentInputs('fc-deploy', agrsOfFcDeploy);
-    const fcDeployComponentIns: any = await core.loadComponent(`devsapp/fc-deploy`);
+    const fcDeployComponentIns: any = await core.loadComponent('devsapp/fc-deploy');
     await fcDeployComponentIns.remove(fcDeployComponentInputs);
   }
 
-  public async init(isDebug?: boolean) {
+  async init(isDebug?: boolean) {
     if (await this.checkIfNecessaryToDeployHelper()) {
       // 部署辅助函数
       await this.makeHelperFunction(isDebug);
@@ -149,14 +151,14 @@ export class FcStress extends IInputsBase{
     */
 
     if (!await this.fcClient.checkIfFunctionExist(FcStress.defaultServiceName, FcStress.defaultFunctionProp.name)) {
-      logger.debug(`Helper function not exist online.`)
+      logger.debug('Helper function not exist online.');
       return true;
     }
     if (!await fse.pathExists(FcStress.helperFunctionDeployedRegionFile)) {
       logger.debug(`${FcStress.helperFunctionDeployedRegionFile} not exist.`);
       return true;
     }
-    const regionList: string[] = JSON.parse(await fse.readFile(FcStress.helperFunctionDeployedRegionFile, { encoding: 'utf-8',  }));
+    const regionList: string[] = JSON.parse(await fse.readFile(FcStress.helperFunctionDeployedRegionFile, { encoding: 'utf-8' }));
     logger.debug(`Deployed region list: ${regionList}`);
     if (!_.includes(regionList, this.region)) {
       logger.debug(`The version of helper function has not been deployed in the region: ${this.region}`);
@@ -170,14 +172,14 @@ export class FcStress extends IInputsBase{
     let regionList: string[] = [];
     if (await fse.pathExists(FcStress.helperFunctionDeployedRegionFile)) {
       // append
-      regionList = JSON.parse(await fse.readFile(FcStress.helperFunctionDeployedRegionFile, { encoding: 'utf-8',  }));
+      regionList = JSON.parse(await fse.readFile(FcStress.helperFunctionDeployedRegionFile, { encoding: 'utf-8' }));
     }
     regionList.push(this.region);
     logger.debug(`Newly region list: ${regionList}`);
-    await fse.writeFile(FcStress.helperFunctionDeployedRegionFile, JSON.stringify(regionList), {flag: 'w', mode: 0o777});
+    await fse.writeFile(FcStress.helperFunctionDeployedRegionFile, JSON.stringify(regionList), { flag: 'w', mode: 0o777 });
   }
 
-  public async invoke(endpoint?: string): Promise<any> {
+  async invoke(endpoint?: string): Promise<any> {
     const event: any = {
       NUM_USERS: this.stressOpts.numUser,
       SPAWN_RATE: this.stressOpts.spawnRate,
@@ -189,7 +191,7 @@ export class FcStress extends IInputsBase{
     if (endpoint) {
       Object.assign(event, {
         CUSTOM_HOST: endpoint.replace(/(^\w+:|^)\/\//, ''),
-      })
+      });
     }
 
     if (this.isEventFunctionType()) {
@@ -198,19 +200,18 @@ export class FcStress extends IInputsBase{
       Object.assign(event, this.httpTypeOpts);
     }
     logger.debug(`Event of invoking function is: \n${yaml.dump(event)}`);
-    const invokeRes: any = await this.fcClient.invokeFunction(FcStress.defaultServiceName, FcStress.defaultFunctionProp.name, JSON.stringify(event));
-    return invokeRes;
+    return await this.fcClient.invokeFunction(FcStress.defaultServiceName, FcStress.defaultFunctionProp.name, JSON.stringify(event));
   }
 
-  public isEventFunctionType(): boolean {
+  isEventFunctionType(): boolean {
     return this.stressOpts.functionType === 'event';
   }
 
-  public isHttpFunctionType(): boolean {
+  isHttpFunctionType(): boolean {
     return this.stressOpts.functionType === 'http';
   }
 
-  public async showHtmlReport(data: any): Promise<void> {
+  async showHtmlReport(data: any): Promise<void> {
     const htmlContent: string = data.report_html;
     await fse.ensureDir(FcStress.defaultHtmlCacheDir);
     let cacheHtmlFileName: string;
@@ -221,25 +222,25 @@ export class FcStress extends IInputsBase{
       cacheHtmlFileName = `url#${curTimestamp}.html`;
     }
     const cacheHtmlFilePath: string = path.join(FcStress.defaultHtmlCacheDir, cacheHtmlFileName || '');
-    await fse.writeFile(cacheHtmlFilePath, htmlContent, {flag: 'w'});
+    await fse.writeFile(cacheHtmlFilePath, htmlContent, { flag: 'w' });
     logger.log(`Html report flie: ${cacheHtmlFilePath}\nExecute 'open ${cacheHtmlFilePath}' on macos for html report with browser.`, 'yellow');
   }
 
-  public async clean(assumeYes?: boolean, isDebug?: boolean): Promise<any> {
+  async clean(assumeYes?: boolean, isDebug?: boolean): Promise<any> {
     // 删除辅助函数
     await this.removeHelperFunction(isDebug);
     // TODO：删除 role
     // 删除 html 文件
-    const msg: string = `Are you sure to remove all the history html report files under ${FcStress.defaultHtmlCacheDir}?`;
+    const msg = `Are you sure to remove all the history html report files under ${FcStress.defaultHtmlCacheDir}?`;
     if (assumeYes || await promptForConfirmContinue(msg)) {
       rimraf.sync(FcStress.defaultHtmlCacheDir);
     }
   }
 
-  public processError(data: any): any {
+  processError(data: any): any {
     if (data?.errorMessage) {
-      if (data?.errorMessage.includes(`[Errno 2] No such file or directory: '/tmp/report.html'`)) {
-        throw new Error(`Invalid format of payload.`);
+      if (data?.errorMessage.includes('[Errno 2] No such file or directory: \'/tmp/report.html\'')) {
+        throw new Error('Invalid format of payload.');
       }
       throw new Error(`Helper function error type: ${data?.errorType}, error message: ${data?.errorMessage}`);
     }
